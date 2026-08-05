@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import proxy from "express-http-proxy";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import authMiddleware from "./middlewares/auth.middleware.js";
+import { getCurrentUser } from "./controllers/user.contoller.js";
 
 dotenv.config();
 
@@ -27,6 +29,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", proxy(authServiceUrl));
+app.get("/api/user", authMiddleware, getCurrentUser);
 
 app.listen(port, () => {
   console.log("Gateway is running on", port);
