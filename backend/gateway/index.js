@@ -13,6 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const authServiceUrl = process.env.AUTH_SERVICE || "http://localhost:3001";
 const chatServiceUrl = process.env.CHAT_SERVICE || "http://localhost:3002";
+const agentServiceUrl = process.env.AGENT_SERVICE || "http://localhost:3003";
 
 app.use(
   cors({
@@ -33,6 +34,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", proxy(authServiceUrl));
 app.use("/api/chat", authMiddleware, proxyWithHeader(chatServiceUrl));
 app.get("/api/user", authMiddleware, getCurrentUser);
+app.use("/api/agent", authMiddleware, proxyWithHeader(agentServiceUrl));
 
 app.listen(port, () => {
   console.log("Gateway is running on", port);
