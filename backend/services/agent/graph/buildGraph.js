@@ -1,36 +1,64 @@
-import {
-  StateSchema,
-  MessagesValue,
-  StateGraph,
-  START,
-  END,
-} from "@langchain/langgraph";
-import { State } from "./state.js";
-import { OpenAI } from "@langchain/openai";
+import { StateGraph, START, END } from "@langchain/langgraph";
+import { chatNode } from "./nodes/chat.node.js";
+import { agentState } from "./state.js";
+import { routerNode } from "./nodes/router.node.js";
+import { searchNode } from "./nodes/search.node.js";
+import { pdfNode } from "./nodes/pdf.node.js";
+import { pptNode } from "./nodes/ppt.node.js";
+import { codingNode } from "./nodes/coding.node.js";
+import { imageNode } from "./nodes/image.node.js";
 
-const mockLlm = (state) => {
-  return { messages: [{ role: "ai", content: "hello world" }] };
-};
+const workflow = new StateGraph(agentState);
 
-const llm = new OpenAI({
-  model: "gpt-3.5-turbo-instruct",
-  temperature: 0,
-  maxTokens: undefined,
-  timeout: undefined,
-  maxRetries: 2,
-  apiKey: process.env.OPENAI_API_KEY,
-});
+workflow.addNode("router", routerNode);
+workflow.addNode("chat", chatNode);
+workflow.addNode("search", searchNode);
+workflow.addNode("pdf", pdfNode);
+workflow.addNode("ppt", pptNode);
+workflow.addNode("coding", codingNode);
+workflow.addNode("image", imageNode);
 
-const callLLM = async (state) => {
-  const response = await llm.invoke([...state.messages]);
+workflow.addEdge("__start__", "router");
+workflow.addConditionalEdges(
+  "router",
+  (agentState) => {
+    switch (agentState.agent) {
+      case "chat":
+        return "chat";
+        break;
+      case "search":
+        return "search";
+        break;
+      case "pdf":
+        return "pdf";
+        break;
+      case "ppt":
+        return "ppt";
+        break;
+      case "coding":
+        return "coding";
+        break;
+      case "image":
+        return "image";
+        break;
+      default:
+        return "chat";
+    }
+  },
+  {
+    chat: "chat",
+    search: "search",
+    pdf: "pdf",
+    ppt: "ppt",
+    coding: "coding",
+    image: "image",
+  },
+);
+workflow.addEdge("search", "chat");
+workflow.addEdge("chat", "__end__");
+workflow.addEdge("pdf", "__end__");
+workflow.addEdge("ppt", "__end__");
+workflow.addEdge("coding", "__end__");
+workflow.addEdge("image", "__end__");
 
-  return {
-    messages: [response],
-  };
-};
-
-export const graph = new StateGraph(State)
-  .addNode("llm", callLLM)
-  .addEdge(START, "llm")
-  .addEdge("llm", END)
-  .compile();
+export const graph = workflow.compile();

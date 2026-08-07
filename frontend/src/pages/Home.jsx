@@ -21,7 +21,7 @@ function Home() {
   const handleAiCall = async () => {
     try {
       const response = await api.post("/api/agent/agentcall", {
-        message: "hi, how are you?",
+        message: "hi, what is capital of portugal?",
       });
       console.log("response : ", response);
       return response;

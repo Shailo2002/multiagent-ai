@@ -1,5 +1,4 @@
 import { HumanMessage } from "@langchain/core/messages";
-import { graph } from "../graph/buildGraph.js";
 
 export const agentCall = async (req, res) => {
   try {
@@ -10,11 +9,15 @@ export const agentCall = async (req, res) => {
       return res.status(400).json({ error: "Invalid message format" });
     }
 
-    const responseMessage = await graph.invoke({
-      messages: [new HumanMessage(message)],
-    });
+    // const responseMessage = await workflow.invoke({
+    //   messages: [
+    //     new HumanMessage({
+    //       content: message.trim(),
+    //     }),
+    //   ],
+    // });
 
-    res.status(200).json({ response: responseMessage });
+    res.status(200).json({ response: "hi from agent controller" });
   } catch (error) {
     console.error("Error in agentCall:", error);
     res.status(500).json({ error: "Internal server error" });
