@@ -11,6 +11,25 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData, clearUserData } from "./redux/userSlice.js";
 import getCurrentUser from "./features/getCurrentUser.js";
+import WorkspacePage from "./pages/WorkspacePage.jsx";
+
+function NotFoundPage() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-(--color-page) px-6 text-center">
+      <div>
+        <p className="text-color-accent text-sm">404</p>
+
+        <h1 className="mt-3 text-4xl font-medium tracking-tight">
+          Page not found
+        </h1>
+
+        <a className="primary-button mt-8" href="/">
+          Return home
+        </a>
+      </div>
+    </main>
+  );
+}
 
 function App() {
   const dispatch = useDispatch();
@@ -29,51 +48,25 @@ function App() {
     getUser();
   }, []);
 
-  const handleLogin = async (token) => {
-    try {
-      const response = await api.post("/api/auth/login", { token });
-
-      dispatch(setUserData(response.data));
-
-      return response.data;
-    } catch (error) {
-      console.error("Login error:", error);
-      dispatch(clearUserData());
-      return null;
-    }
-  };
-
-  const googleLogin = async () => {
-    try {
-      const data = await signInWithPopup(auth, googleProvider);
-      const token = await data.user.getIdToken();
-
-      await handleLogin(token);
-    } catch (error) {
-      console.error("Google login failed:", {
-        code: error.code,
-        message: error.message,
-      });
-    }
-  };
+  
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={<LandingPage onPrimaryAction={googleLogin} />}
-        />
+        <Route path="/" element={<LandingPage />} />
 
         <Route
           path="/login"
-          element={userData ? <Navigate to="/home" replace /> : <LoginPage />}
+          element={userData ? <Navigate to="/app" replace /> : <LoginPage />}
         />
 
         <Route
-          path="/home"
-          element={userData ? <Home /> : <Navigate to="/login" replace />}
+          path="/app"
+          element={
+            userData ? <WorkspacePage /> : <Navigate to="/login" replace />
+          }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
