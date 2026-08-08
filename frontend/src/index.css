@@ -20,8 +20,8 @@
   --color-surface-hover: #222224;
 
   /* Borders */
-  --color-border: #262628;
-  --color-border-strong: #323236;
+  --color-primary: #262628;
+  --color-secondary: #323236;
 
   /* Text */
   --color-text: #e7e7e9;

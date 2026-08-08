@@ -8,6 +8,7 @@ import { setUserData, clearUserData } from "../redux/userSlice.js";
 import api from "../../utils/axios.js";
 
 function LoginPage() {
+  const dispatch = useDispatch();
   const handleLogin = async (token) => {
     try {
       const response = await api.post("/api/auth/login", { token });
