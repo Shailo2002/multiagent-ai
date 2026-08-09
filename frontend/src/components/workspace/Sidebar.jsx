@@ -5,7 +5,11 @@ import { FaPlus } from "react-icons/fa6";
 import { IoIosArrowDown } from "react-icons/io";
 import { HiMiniUserCircle } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
-import { chats, sidebarButtons } from "../../constants/sidebarConst.js";
+import {
+  chats,
+  profileMenuButtons,
+  sidebarButtons,
+} from "../../constants/sidebarConst.js";
 import { TbLayoutSidebarLeftCollapse } from "react-icons/tb";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -39,7 +43,7 @@ function Sidebar({ userData }) {
       initial={false}
       animate={{ width: isExpanded ? 240 : 52 }}
       transition={{ duration: 0.22, ease: "easeInOut" }}
-      className="border-r-0.5 bg-surface-raised hidden h-screen shrink-0 flex-col overflow-hidden border-white/20 p-1 sm:flex"
+      className="border-r-0.5 bg-surface-raised hidden h-screen shrink-0 flex-col overflow-visible border-white/20 p-1 sm:flex"
     >
       <header
         style={{
@@ -161,9 +165,18 @@ function Sidebar({ userData }) {
       </section>
 
       <footer
-        className={`border-secondary flex h-12 shrink-0 items-center justify-between border-t px-1.5`}
+        className={`border-secondary relative flex h-12 shrink-0 items-center justify-between border-t px-1.5`}
+        onMouseEnter={openMenu}
+        onMouseLeave={closeMenu}
+        onFocus={openMenu}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            closeMenu();
+          }
+        }}
+        onClick={toggleMenu}
       >
-        <div className="flex min-w-0 items-center ">
+        <div className="flex min-w-0 items-center">
           <button
             type="button"
             aria-label="Open user profile"
@@ -214,6 +227,56 @@ function Sidebar({ userData }) {
         >
           <FiLogOut size={19} />
         </motion.button>
+
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 8,
+                scale: 0.97,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                y: 8,
+                scale: 0.97,
+              }}
+              transition={{
+                duration: 0.16,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className={`bg-popup absolute bottom-full left-0 z-50 mb-2 ml-1 origin-bottom-left overflow-hidden rounded-xl border border-white/10 shadow-[0_16px_40px_rgb(0_0_0/0.55),0_4px_12px_rgb(0_0_0/0.35)] ring-1 ring-black/20 ${isExpanded ? "w-56" : "w-42"} `}
+            >
+              <div className="flex max-h-full flex-col gap-0.5 overflow-y-auto p-1">
+                {profileMenuButtons.map((profile) => {
+                  const Icon = profile.icon;
+
+                  return (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      aria-label={profile.label}
+                      className="text-text-soft hover:bg-popup-hover hover:text-text flex h-10 w-full items-center gap-2 overflow-hidden rounded-lg px-3 text-sm transition-colors duration-150"
+                    >
+                      <span className="flex w-5 shrink-0 items-center justify-center">
+                        <Icon size={20} />
+                      </span>
+
+                      <span className="truncate whitespace-nowrap">
+                        {profile.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </footer>
     </motion.aside>
   );

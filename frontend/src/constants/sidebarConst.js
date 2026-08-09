@@ -6,6 +6,14 @@ import { IoIosArrowDown } from "react-icons/io";
 import { HiMiniUserCircle } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
 import { FiPlusCircle } from "react-icons/fi";
+import {
+  FiUser,
+  FiSettings,
+  FiHelpCircle,
+  FiChevronRight,
+} from "react-icons/fi";
+import { HiOutlineSparkles } from "react-icons/hi2";
+import { LuGauge } from "react-icons/lu";
 
 export const sidebarButtons = [
   {
@@ -61,5 +69,39 @@ export const chats = [
   {
     id: "chat-10",
     name: "Upcoming Product Launch Checklist and Final Team Coordination",
+  },
+];
+
+export const profileMenuButtons = [
+  {
+    id: "upgrade-plan",
+    label: "Upgrade plan",
+    icon: HiOutlineSparkles,
+  },
+  {
+    id: "personalization",
+    label: "Personalization",
+    icon: LuGauge,
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    icon: FiUser,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: FiSettings,
+  },
+  {
+    id: "help",
+    label: "Help",
+    icon: FiHelpCircle,
+    endIcon: FiChevronRight,
+  },
+  {
+    id: "logout",
+    label: "Log out",
+    icon: FiLogOut,
   },
 ];
