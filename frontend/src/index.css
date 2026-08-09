@@ -5,23 +5,20 @@
 @theme {
   /* Typography */
   --font-grotesk: "Host Grotesk", sans-serif;
-
   --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-
   --font-geist: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-
   --font-sans: "Host Grotesk", sans-serif;
 
   /* Backgrounds */
   --color-canvas: #151515;
   --color-sidebar: #101010;
   --color-surface: #191919;
-  --color-surface-raised: #1d1d1f;
+  --color-surface-raised: #1a1a1a;
   --color-surface-hover: #222224;
 
   /* Borders */
   --color-primary: #262628;
-  --color-secondary: #323236;
+  --color-secondary: #202020;
 
   /* Text */
   --color-text: #e7e7e9;

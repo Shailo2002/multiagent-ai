@@ -1,29 +1,37 @@
-import React from "react";
 import { defaultFeatures } from "./landigPage/featureMenu.data";
 
 function Chatbox() {
   return (
-    <div className="flex h-svh w-full items-center justify-center">
-      <div className="flex max-w-3xl flex-col items-center justify-center p-6 pb-[8%]">
-        <div className="rounded-full border border-orange-400 bg-orange-200 px-4 py-1 text-orange-600">
+    <div className="flex h-full w-full items-center justify-center p-2">
+      <div className="flex w-full max-w-3xl flex-col items-center justify-center px-4 pb-[8%] sm:p-6">
+        <div className="rounded-pill border-warm text-warm border bg-orange-400/10 px-4 py-1 text-sm">
           🧡 Loved by customers
         </div>
-        <div className="font-grotesk mt-6 text-4xl">
+
+        <h1 className="font-grotesk text-text mt-6 w-full text-center text-3xl font-medium tracking-tight sm:text-4xl">
           Build, Run & Grow your business
-        </div>
-        <textarea className="border-secondary rounded-card m-4 h-36 w-3xl border bg-zinc-800 p-2">
-          Type your ideas here...
-        </textarea>
-        <div className="scrollbar-width:none flex max-w-3xl gap-2 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden">
-          {defaultFeatures.map((feature) => (
-            <button
-              key={feature.id}
-              className="border-secondary inline-flex shrink-0 items-center gap-2 rounded-full border px-2 py-1"
-            >
-              <feature.icon />
-              {feature.label}
-            </button>
-          ))}
+        </h1>
+
+        <textarea
+          placeholder="Type your ideas here..."
+          className="rounded-card border-secondary bg-surface-raised text-text placeholder:text-text-muted focus:border-accent mt-6 h-36 w-full resize-none border p-4 transition-colors outline-none"
+        />
+
+        <div className="scrollbar-width:none mt-4 flex w-full gap-2 overflow-x-auto pb-1 whitespace-nowrap [&::-webkit-scrollbar]:hidden">
+          {defaultFeatures.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <button
+                key={feature.id}
+                type="button"
+                className="rounded-pill bg-surface text-text-soft hover:border-border-strong hover:bg-surface-hover hover:text-text inline-flex shrink-0 items-center gap-2 border-[0.5px] border-white/20 px-3 py-1.5 text-sm transition-colors"
+              >
+                <Icon className="size-4" />
+                <span>{feature.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

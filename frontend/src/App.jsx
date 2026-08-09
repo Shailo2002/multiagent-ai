@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import api from "../utils/axios.js";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
-import Home from "./pages/Home.jsx";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData, clearUserData } from "./redux/userSlice.js";
@@ -15,17 +14,18 @@ import WorkspacePage from "./pages/WorkspacePage.jsx";
 
 function NotFoundPage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-(--color-page) px-6 text-center">
+    <main className="grid min-h-screen place-items-center bg-(--color-page) px-6 text-center font-serif">
       <div>
-        <p className="text-color-accent text-sm">404</p>
+        <p className="text-color-accent text-4xl">404</p>
 
-        <h1 className="mt-3 text-4xl font-medium tracking-tight">
-          Page not found
-        </h1>
+        <h1 className="mt-2 text-4xl tracking-tight">Page not found</h1>
 
-        <a className="primary-button mt-8" href="/">
+        <button
+          className="primary-button bg-accent mt-6 text-canvas rounded-full p-2 px-4"
+          href="/"
+        >
           Return home
-        </a>
+        </button>
       </div>
     </main>
   );
@@ -48,24 +48,19 @@ function App() {
     getUser();
   }, []);
 
-  
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/"
+          element={userData ? <WorkspacePage /> : <LandingPage />}
+        />
 
         <Route
           path="/login"
-          element={userData ? <Navigate to="/app" replace /> : <LoginPage />}
+          element={userData ? <Navigate to="/" replace /> : <LoginPage />}
         />
 
-        <Route
-          path="/app"
-          element={
-            userData ? <WorkspacePage /> : <Navigate to="/login" replace />
-          }
-        />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

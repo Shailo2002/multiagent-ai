@@ -18,7 +18,7 @@ function Navbar() {
       <div className="flex h-16 w-full max-w-3xl items-center justify-between">
         <BrandLogoWithName />
 
-        <div className="flex items-center justify-center gap-2 text-zinc-400 transition-all duration-200 ease-out hover:scale-[1.02]">
+        <div className="hidden items-center justify-center gap-2 text-zinc-400 transition-all duration-200 ease-out hover:scale-[1.02] sm:flex">
           <FeatureChips features={defaultFeatures} />
           <motion.div
             whileHover="hover"
