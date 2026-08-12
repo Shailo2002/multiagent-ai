@@ -18,10 +18,14 @@
   --color-popup: #202022;
   --color-popup-hover: #29292c;
   --color-popup-border: #303034;
+  --color-chat-ai: #1d1d1f;
+  --color-chat-user: #243033;
 
   /* Borders */
   --color-primary: #262628;
   --color-secondary: #202020;
+  --color-chat-ai-border: #2a2a2d;
+  --color-chat-user-border: #2d484d;
 
   /* Text */
   --color-text: #e7e7e9;

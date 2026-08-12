@@ -1,5 +1,5 @@
+import NewChatbox from "../components/NewChatbox";
 import Sidebar from "../components/workspace/Sidebar";
-import Chatbox from "../components/Chatbox";
 import { useSelector } from "react-redux";
 
 function WorkspacePage() {
@@ -10,7 +10,7 @@ function WorkspacePage() {
       <Sidebar userData={userData} />
 
       <main className="min-w-0 flex-1 overflow-y-auto">
-        <Chatbox />
+        <NewChatbox />
       </main>
     </div>
   );

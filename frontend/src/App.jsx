@@ -21,7 +21,7 @@ function NotFoundPage() {
         <h1 className="mt-2 text-4xl tracking-tight">Page not found</h1>
 
         <button
-          className="primary-button bg-accent mt-6 text-canvas rounded-full p-2 px-4"
+          className="primary-button bg-accent text-canvas mt-6 rounded-full p-2 px-4"
           href="/"
         >
           Return home
@@ -55,7 +55,10 @@ function App() {
           path="/"
           element={userData ? <WorkspacePage /> : <LandingPage />}
         />
-
+        <Route
+          path="/chat/:chatId"
+          element={userData ? <WorkspacePage /> : <LandingPage />}
+        />
         <Route
           path="/login"
           element={userData ? <Navigate to="/" replace /> : <LoginPage />}

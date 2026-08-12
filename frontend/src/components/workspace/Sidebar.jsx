@@ -12,8 +12,10 @@ import {
 } from "../../constants/sidebarConst.js";
 import { TbLayoutSidebarLeftCollapse } from "react-icons/tb";
 import { AnimatePresence, motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
 
 function Sidebar({ userData }) {
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -153,6 +155,7 @@ function Sidebar({ userData }) {
                   <button
                     key={chat.id}
                     type="button"
+                    onClick={() => navigate(`/chat/${chat.id}`)}
                     className="rounded-control text-text-soft hover:bg-surface-hover hover:text-text w-full truncate px-3 py-2 text-left text-sm transition-colors"
                   >
                     {chat.name}

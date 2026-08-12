@@ -1,6 +1,6 @@
 import React from "react";
 import Navbar from "../components/Navbar.jsx";
-import Chatbox from "../components/Chatbox.jsx";
+import NewChatbox from "../components/NewChatbox.jsx";
 
 function LandingPage() {
   return (
@@ -9,7 +9,7 @@ function LandingPage() {
 
       <section className="flex min-h-screen flex-col pt-16">
         <div className="flex flex-1 items-center justify-center">
-          <Chatbox />
+          <NewChatbox />
         </div>
       </section>
 
