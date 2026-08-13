@@ -1,60 +1,61 @@
-import Conversation from "../models/conversation.model.js";
+import Chat from "../models/chat.model.js";
 import Message from "../models/message.model.js";
 
-export const createConversation = async (req, res) => {
+export const createChat = async (req, res) => {
   try {
     const userId = req.headers["x-user-id"];
-    console.log("userId : ", userId);
 
-    const conversation = await Conversation.create({ userId });
+    const chat = await Chat.create({ userId });
     res.status(201).json({
-      data: conversation,
-      message: "Conversation created successfully",
+      data: chat,
+      message: "chat created successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to create conversation" });
+    res.status(500).json({ message: "Failed to create chat" });
   }
 };
 
-export const getConversation = async (req, res) => {
+export const getChat = async (req, res) => {
   try {
+    console.log("get chat controller ping");
+
     const userId = req.headers["x-user-id"];
     console.log("userId : ", userId);
 
-    const conversation = await Conversation.find({ userId }).sort({
+    const chat = await Chat.find({ userId }).sort({
       createdAt: -1,
     });
     res.status(201).json({
-      data: conversation,
-      message: "Conversation get successfully",
+      data: chat,
+      message: "Chat get successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get conversation" });
+    res.status(500).json({ message: "Failed to get chat" });
   }
 };
 
-export const updateConversatioTitle = async (req, res) => {
+export const updateChatTitle = async (req, res) => {
   try {
-    const { conversationId, title } = req.body;
+    const { chatId, title } = req.body;
 
-    const conversation = await Conversation.findByIdAndUpdate(conversationId, {
+    const chat = await Chat.findByIdAndUpdate(chatId, {
       title,
     });
 
     res.status(201).json({
-      data: conversation,
-      message: "Conversation updated successfully",
+      data: chat,
+      message: "Chat updated successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update conversation" });
+    res.status(500).json({ message: "Failed to update chat" });
   }
 };
 
 export const saveMessage = async (req, res) => {
   try {
-    const { conversationId, content, role } = req.body;
+    const { chatId, content, role } = req.body;
 
-    const message = await Message.create({ conversationId, content, role });
+    const message = await Message.create({ chatId, content, role });
 
     res.status(201).json({
       data: message,
@@ -67,9 +68,9 @@ export const saveMessage = async (req, res) => {
 
 export const getMessage = async (req, res) => {
   try {
-    const conversationId = req.params.conversationId;
+    const chatId = req.params.chatId;
 
-    const message = await Message.find({ conversationId }).sort({
+    const message = await Message.find({ chatId }).sort({
       createdAt: -1,
     });
 

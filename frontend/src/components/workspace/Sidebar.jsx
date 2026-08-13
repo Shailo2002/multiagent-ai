@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrandLogo, BrandLogoWithName } from "../BrandLogo";
 import { GoSidebarExpand } from "react-icons/go";
 import { FaPlus } from "react-icons/fa6";
@@ -6,16 +6,22 @@ import { IoIosArrowDown } from "react-icons/io";
 import { HiMiniUserCircle } from "react-icons/hi2";
 import { FiLogOut } from "react-icons/fi";
 import {
-  chats,
   profileMenuButtons,
   sidebarButtons,
 } from "../../constants/sidebarConst.js";
 import { TbLayoutSidebarLeftCollapse } from "react-icons/tb";
 import { AnimatePresence, motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
+import logoutUser from "../../features/logout";
+import { useDispatch, useSelector } from "react-redux";
+import { clearUserData } from "../../redux/userSlice";
+import getChat from "../../features/getChat";
+import { setChatsData } from "../../redux/chatsSlice";
 
 function Sidebar({ userData }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const chatsData = useSelector((state) => state.chats.chatsData);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +46,20 @@ function Sidebar({ userData }) {
     setIsChatHistoryOpen((isChatHistoryOpen) => !isChatHistoryOpen);
   }
 
+  useEffect(() => {
+    const handleGetChats = async () => {
+      try {
+        const response = await getChat();
+        console.log("response from getChat : ", response?.data);
+        dispatch(setChatsData(response?.data));
+      } catch (error) {
+        console.log("error while getting chats : ", error);
+      }
+    };
+
+    handleGetChats();
+  }, [userData]);
+
   return (
     <motion.aside
       initial={false}
@@ -54,7 +74,10 @@ function Sidebar({ userData }) {
         className="flex items-center py-4"
       >
         {isExpanded && (
-          <div className="inline-flex min-w-0 overflow-hidden">
+          <div
+            className="inline-flex min-w-0 cursor-pointer overflow-hidden"
+            onClick={() => navigate("/")}
+          >
             <BrandLogoWithName />
           </div>
         )}
@@ -82,6 +105,7 @@ function Sidebar({ userData }) {
               type="button"
               aria-label={option.label}
               title={!isExpanded ? option.label : undefined}
+              onClick={option?.onClick}
               className="rounded-control text-text-soft hover:bg-surface-hover hover:text-text flex h-10 w-full items-center overflow-hidden px-3 text-sm transition-colors"
             >
               <span className="flex w-5 shrink-0 items-center justify-center">
@@ -151,14 +175,14 @@ function Sidebar({ userData }) {
               className="min-h-0 overflow-hidden"
             >
               <div className="flex max-h-full flex-col gap-0.5 overflow-y-auto pr-1">
-                {chats.map((chat) => (
+                {chatsData?.map((chat) => (
                   <button
-                    key={chat.id}
+                    key={chat._id}
                     type="button"
-                    onClick={() => navigate(`/chat/${chat.id}`)}
+                    onClick={() => navigate(`/chat/${chat._id}`)}
                     className="rounded-control text-text-soft hover:bg-surface-hover hover:text-text w-full truncate px-3 py-2 text-left text-sm transition-colors"
                   >
-                    {chat.name}
+                    {chat.title}
                   </button>
                 ))}
               </div>
@@ -222,6 +246,11 @@ function Sidebar({ userData }) {
           transition={{
             duration: 0.18,
             ease: "easeInOut",
+          }}
+          onClick={() => {
+            logoutUser();
+            dispatch(clearUserData());
+            navigate("/");
           }}
           type="button"
           aria-label="Log out"

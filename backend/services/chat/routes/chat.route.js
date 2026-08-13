@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  createConversation,
-  getConversation,
+  createChat,
+  getChat,
   getMessage,
   saveMessage,
-  updateConversatioTitle,
+  updateChatTitle,
 } from "../controllers/chat.controller.js";
 
 const router = express.Router();
 
-router.get("/create-conversation", createConversation);
-router.get("/get-conversation", getConversation);
-router.post("/update-conversation", updateConversatioTitle);
+router.get("/create-chat", createChat);
+router.get("/get-chat", getChat);
+router.post("/update-chat", updateChatTitle);
 router.post("/save-message", saveMessage);
-router.get("/get-message:conversationId", getMessage);
+router.get("/get-message/:chatId", getMessage);
 
 export default router;

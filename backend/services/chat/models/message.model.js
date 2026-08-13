@@ -4,7 +4,7 @@ const messageSchema = new mongoose.Schema(
   {
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Conversation",
+      ref: "Chat",
     },
     role: {
       type: String,
