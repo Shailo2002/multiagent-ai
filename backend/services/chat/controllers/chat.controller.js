@@ -100,7 +100,7 @@ export const saveMessage = async (req, res) => {
   }
 };
 
-export const sendMessage2 = async (req, res) => {
+export const sendMessage = async (req, res) => {
   try {
     let { chatId, content } = req.body;
 
@@ -166,87 +166,61 @@ export const sendMessage2 = async (req, res) => {
   }
 };
 
-export const sendMessage = async (req, res) => {
-  try {
-    let { chatId, content } = req.body;
-
-    const userId = req.headers["x-user-id"];
-
-    if (!content || typeof content !== "string" || !content.trim()) {
-      return res.status(400).json({
-        message: "Message content is required",
-      });
-    }
-
-    content = content.trim();
-
-    let chat;
-    let isNewChat = false;
-
-    if (!chatId) {
-      const title =
-        content.length > 50 ? `${content.slice(0, 50)}...` : content;
-
-      chat = await Chat.create({
-        title,
-        userId,
-      });
-
-      chatId = chat._id;
-
-      isNewChat = true;
-    }
-
-    else {
-      chat = await Chat.findOne({
-        _id: chatId,
-        userId,
-      });
-
-      if (!chat) {
-        return res.status(404).json({
-          message: "Chat not found",
-        });
-      }
-    }
-
-    const userMessage = await Message.create({
-      chatId,
-      content,
-      role: "user",
-    });
-
-    return res.status(201).json({
-      message: "Message saved",
-
-      data: {
-        chatId,
-        isNewChat,
-        userMessage,
-      },
-    });
-  } catch (error) {
-    console.error("sendMessage error:", error);
-
-    return res.status(500).json({
-      message: "Failed to send message",
-    });
-  }
-};
-
 export const getMessage = async (req, res) => {
   try {
-    const chatId = req.params.chatId;
+    const { chatId } = req.params;
+    const userId = req.headers["x-user-id"];
 
-    const message = await Message.find({ chatId }).sort({
-      createdAt: -1,
+    const limit = req.query.limit ?? 4;
+    const cursor = req.query.cursor;
+
+    const chat = await Chat.findOne({
+      _id: chatId,
+      userId,
     });
 
-    res.status(201).json({
-      data: message,
+    if (!chat) {
+      return res.status(404).json({
+        message: "Chat not found",
+      });
+    }
+
+    const query = {
+      chatId,
+    };
+
+    if (cursor) {
+      query.createdAt = {
+        $lt: new Date(cursor),
+      };
+    }
+
+    const messages = await Message.find(query)
+      .sort({
+        createdAt: -1,
+      })
+      .limit(limit + 1);
+
+    const hasMore = messages.length > limit;
+
+    const pageMessages = hasMore ? messages.slice(0, limit) : messages;
+
+    const nextCursor =
+      hasMore && pageMessages.length
+        ? pageMessages[pageMessages.length - 1].createdAt
+        : null;
+
+    return res.status(200).json({
+      data: pageMessages,
+      cursor: nextCursor,
+      hasMore,
       message: "Messages get successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get Messages" });
+    console.error("getMessage error:", error);
+
+    return res.status(500).json({
+      message: "Failed to get Messages",
+    });
   }
 };

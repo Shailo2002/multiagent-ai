@@ -7,8 +7,10 @@ import api from "../../utils/axios";
 import { getMessages } from "../features/getMessages";
 import {
   addMessageData,
+  prependMessageData,
   setGenerating,
   setMessageData,
+  setMessageLoading,
 } from "../redux/messagesSlice";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,6 +18,7 @@ import AiMarkdown from "./AiMarkdown";
 
 function NewChatbox() {
   const bottomRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const { chatId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -25,6 +28,11 @@ function NewChatbox() {
   );
   const messages = messageData?.messages ?? [];
   const isGenerating = messageData?.isGenerating ?? false;
+  const cursor = messageData?.cursor ?? null;
+  const hasMore = messageData?.hasMore ?? false;
+  const loading = messageData?.loading ?? false;
+  const lastMessageId = messages.at(-1)?._id;
+  console.log("messageData : ", messageData);
 
   const handleSendMessage = async () => {
     const message = input.trim();
@@ -105,6 +113,51 @@ function NewChatbox() {
     }
   };
 
+  const loadOlderMessages = async () => {
+    if (!chatId || !hasMore || loading || !cursor) return;
+
+    const container = scrollContainerRef.current;
+
+    const previousScrollHeight = container?.scrollHeight ?? 0;
+    const previousScrollTop = container?.scrollTop ?? 0;
+
+    try {
+      dispatch(
+        setMessageLoading({
+          chatId,
+          loading: true,
+        }),
+      );
+
+      const response = await getMessages({ chatId, cursor });
+
+      dispatch(
+        prependMessageData({
+          chatId,
+          messages: [...response.data].reverse(),
+          cursor: response.cursor,
+          hasMore: response.hasMore,
+        }),
+      );
+
+      requestAnimationFrame(() => {
+        if (!container) return;
+
+        const newScrollHeight = container.scrollHeight;
+        const heightDifference = newScrollHeight - previousScrollHeight;
+
+        container.scrollTop = previousScrollTop + heightDifference;
+      });
+    } finally {
+      dispatch(
+        setMessageLoading({
+          chatId,
+          loading: false,
+        }),
+      );
+    }
+  };
+
   const handleKeyDown = async (event) => {
     try {
       if (event.key !== "Enter" || event.shiftKey) return;
@@ -112,6 +165,15 @@ function NewChatbox() {
       await handleSendMessage();
     } catch (error) {
       console.log("error while getting ai response : ", error);
+    }
+  };
+
+  const handleScroll = (event) => {
+    const container = event.currentTarget;
+    // console.log("scrolling bar : ", container.scrollTop);
+
+    if (container.scrollTop <= 100) {
+      loadOlderMessages();
     }
   };
 
@@ -128,7 +190,12 @@ function NewChatbox() {
 
     const handleGetMessages = async () => {
       try {
-        const response = await getMessages(chatId);
+        const response = await getMessages({
+          chatId,
+          cursor,
+        });
+
+        console.log("response : ", response);
 
         const fetchedMessages = response?.data ?? [];
 
@@ -140,9 +207,9 @@ function NewChatbox() {
         dispatch(
           setMessageData({
             chatId,
-            messages: [...fetchedMessages].reverse(),
-            cursor: null,
-            hasMore: false,
+            messages: [...response.data].reverse(),
+            cursor: response.cursor,
+            hasMore: response.hasMore,
           }),
         );
       } catch (error) {
@@ -158,14 +225,18 @@ function NewChatbox() {
       behavior: "smooth",
       block: "end",
     });
-  }, [messages]);
+  }, [chatId, lastMessageId]);
 
   return (
     <div className="flex h-full w-full items-center justify-center">
       {messages?.length >= 1 ? (
-        <div className="flex h-screen w-full max-w-4xl flex-col p-4">
-          <div className="scrollbar-width:none h-full min-h-0 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden">
-            <div className="flex min-h-full flex-col justify-end space-y-6">
+        <div className="flex h-screen w-full flex-col p-4">
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="scrollbar-width:none h-full min-h-0 w-full justify-center overflow-y-auto [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="mx-auto flex min-h-full max-w-4xl flex-col justify-end space-y-6">
               {messages?.map((chat, index) => {
                 const isAssistant = ["assistant", "ai"].includes(chat.role);
 
@@ -210,7 +281,7 @@ function NewChatbox() {
               <div ref={bottomRef} />
             </div>
           </div>
-          <div className="relative w-full">
+          <div className="relative mx-auto w-full max-w-4xl">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}

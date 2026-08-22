@@ -62,6 +62,22 @@ const messageSlice = createSlice({
 
       state.messagesByChat[chatId].isGenerating = isGenerating;
     },
+
+    setMessageLoading(state, action) {
+      const { chatId, loading } = action.payload;
+
+      if (!state.messagesByChat[chatId]) {
+        state.messagesByChat[chatId] = {
+          messages: [],
+          cursor: null,
+          hasMore: false,
+          loading: false,
+          isGenerating: false,
+        };
+      }
+
+      state.messagesByChat[chatId].loading = loading;
+    },
   },
 });
 
@@ -70,6 +86,7 @@ export const {
   prependMessageData,
   addMessageData,
   setGenerating,
+  setMessageLoading,
 } = messageSlice.actions;
 
 export default messageSlice.reducer;
