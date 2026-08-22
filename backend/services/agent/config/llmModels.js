@@ -2,48 +2,39 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 
-export const gemini = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-pro",
-  temperature: 0,
-  maxRetries: 2,
-  // other params...
-});
+const getOpenAI = () =>
+  new ChatOpenAI({
+    model: process.env.OPENAI_MODEL,
+    maxRetries: 2,
+  });
 
-export const openai = new ChatOpenAI({
-  model: process.env.OPENAI_MODEL,
-  temperature: 0,
-  maxRetries: 2,
-});
+const getAnthropic = () =>
+  new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    maxRetries: 2,
+  });
 
-const anthropic = new ChatAnthropic({
-  model: "claude-haiku-4-5-20251001",
-  temperature: 0,
-  maxTokens: undefined,
-  maxRetries: 2,
-  // other params...
-});
+const getGemini = () =>
+  new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-pro",
+    maxRetries: 2,
+  });
 
 export const getModel = async (agent) => {
   switch (agent) {
     case "chat":
-      return openai;
-      break;
     case "search":
-      return openai;
-      break;
+      return getOpenAI();
+
     case "pdf":
-      return anthropic;
-      break;
     case "ppt":
-      return anthropic;
-      break;
     case "coding":
-      return anthropic;
-      break;
+      return getAnthropic();
+
     case "image":
-      return gemini;
-      break;
+      return getGemini();
+
     default:
-      return openai;
+      return getOpenAI();
   }
 };

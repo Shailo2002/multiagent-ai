@@ -1,14 +1,14 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { chatNode } from "./nodes/chat.node.js";
-import { agentState } from "./state.js";
 import { routerNode } from "./nodes/router.node.js";
 import { searchNode } from "./nodes/search.node.js";
 import { pdfNode } from "./nodes/pdf.node.js";
 import { pptNode } from "./nodes/ppt.node.js";
 import { codingNode } from "./nodes/coding.node.js";
 import { imageNode } from "./nodes/image.node.js";
+import { AgentState } from "./state.js";
 
-const workflow = new StateGraph(agentState);
+const workflow = new StateGraph(AgentState);
 
 workflow.addNode("router", routerNode);
 workflow.addNode("chat", chatNode);

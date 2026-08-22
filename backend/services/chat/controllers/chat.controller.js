@@ -3,13 +3,20 @@ import Message from "../models/message.model.js";
 
 export const createChat = async (req, res) => {
   try {
+    console.log("create chat route");
     const userId = req.headers["x-user-id"];
+    const { title } = req.body;
 
-    const chat = await Chat.create({ userId });
+    const chat = await Chat.create({
+      userId,
+      ...(title && { title }),
+    });
     res.status(201).json({
       data: chat,
       message: "chat created successfully",
     });
+
+    console.log("chat :  ", chat);
   } catch (error) {
     res.status(500).json({ message: "Failed to create chat" });
   }
@@ -55,14 +62,175 @@ export const saveMessage = async (req, res) => {
   try {
     const { chatId, content, role } = req.body;
 
-    const message = await Message.create({ chatId, content, role });
+    const userId = req.headers["x-user-id"];
 
-    res.status(201).json({
+    if (!chatId || !content || !role) {
+      return res.status(400).json({
+        message: "chatId, content and role are required",
+      });
+    }
+
+    const chat = await Chat.findOne({
+      _id: chatId,
+      userId,
+    });
+
+    if (!chat) {
+      return res.status(404).json({
+        message: "Chat not found",
+      });
+    }
+
+    const message = await Message.create({
+      chatId,
+      content,
+      role,
+    });
+
+    return res.status(201).json({
       data: message,
       message: "Message saved successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to save Message" });
+    console.error("saveMessage error:", error);
+
+    return res.status(500).json({
+      message: "Failed to save message",
+    });
+  }
+};
+
+export const sendMessage2 = async (req, res) => {
+  try {
+    let { chatId, content } = req.body;
+
+    const userId = req.headers["x-user-id"];
+
+    if (!content || typeof content !== "string" || !content.trim()) {
+      return res.status(400).json({
+        message: "Message content is required",
+      });
+    }
+
+    content = content.trim();
+
+    let chat;
+    let isNewChat = false;
+
+    if (!chatId) {
+      const title =
+        content.length > 50 ? `${content.slice(0, 50)}...` : content;
+
+      chat = await Chat.create({
+        title,
+        userId,
+      });
+
+      chatId = chat._id;
+
+      isNewChat = true;
+    } else {
+      chat = await Chat.findOne({
+        _id: chatId,
+        userId,
+      });
+
+      if (!chat) {
+        return res.status(404).json({
+          message: "Chat not found",
+        });
+      }
+    }
+
+    const userMessage = await Message.create({
+      chatId,
+      content,
+      role: "user",
+    });
+
+    return res.status(201).json({
+      message: "Message saved",
+
+      data: {
+        chatId,
+        isNewChat,
+        userMessage,
+      },
+    });
+  } catch (error) {
+    console.error("sendMessage error:", error);
+
+    return res.status(500).json({
+      message: "Failed to send message",
+    });
+  }
+};
+
+export const sendMessage = async (req, res) => {
+  try {
+    let { chatId, content } = req.body;
+
+    const userId = req.headers["x-user-id"];
+
+    if (!content || typeof content !== "string" || !content.trim()) {
+      return res.status(400).json({
+        message: "Message content is required",
+      });
+    }
+
+    content = content.trim();
+
+    let chat;
+    let isNewChat = false;
+
+    if (!chatId) {
+      const title =
+        content.length > 50 ? `${content.slice(0, 50)}...` : content;
+
+      chat = await Chat.create({
+        title,
+        userId,
+      });
+
+      chatId = chat._id;
+
+      isNewChat = true;
+    }
+
+    else {
+      chat = await Chat.findOne({
+        _id: chatId,
+        userId,
+      });
+
+      if (!chat) {
+        return res.status(404).json({
+          message: "Chat not found",
+        });
+      }
+    }
+
+    const userMessage = await Message.create({
+      chatId,
+      content,
+      role: "user",
+    });
+
+    return res.status(201).json({
+      message: "Message saved",
+
+      data: {
+        chatId,
+        isNewChat,
+        userMessage,
+      },
+    });
+  } catch (error) {
+    console.error("sendMessage error:", error);
+
+    return res.status(500).json({
+      message: "Failed to send message",
+    });
   }
 };
 

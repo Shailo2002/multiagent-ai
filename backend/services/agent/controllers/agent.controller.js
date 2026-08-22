@@ -1,25 +1,65 @@
 import { HumanMessage } from "@langchain/core/messages";
+import axios from "axios";
+import { graph } from "../graph/buildGraph.js";
+
+const chatUrl = process.env.CHAT_SERVICE || "http://localhost:3002";
 
 export const agentCall = async (req, res) => {
   try {
-    console.log("agentcall controller");
-    const { message } = req.body;
+    const { message, chatId } = req.body;
 
-    if (!message || typeof message !== "string") {
-      return res.status(400).json({ error: "Invalid message format" });
+    const userId = req.headers["x-user-id"];
+
+    if (!message || !chatId) {
+      return res.status(400).json({
+        message: "message and chatId are required",
+      });
     }
 
-    // const responseMessage = await workflow.invoke({
-    //   messages: [
-    //     new HumanMessage({
-    //       content: message.trim(),
-    //     }),
-    //   ],
-    // });
+    const response = await graph.invoke({
+      messages: [
+        new HumanMessage({
+          content: message.trim(),
+        }),
+      ],
+    });
 
-    res.status(200).json({ response: "hi from agent controller" });
+    const aiContent = response?.messages?.at(-1)?.content;
+
+    if (!aiContent) {
+      throw new Error("AI response is empty");
+    }
+
+    const savedAiResponse = await axios.post(
+      `${chatUrl}/save-message`,
+      {
+        chatId,
+        content: aiContent,
+        role: "assistant",
+      },
+      {
+        headers: {
+          "x-user-id": userId,
+        },
+      },
+    );
+
+    const assistantMessage = savedAiResponse.data?.data;
+
+    return res.status(200).json({
+      message: "AI response generated",
+
+      data: {
+        chatId,
+        assistantMessage,
+      },
+    });
   } catch (error) {
     console.error("Error in agentCall:", error);
-    res.status(500).json({ error: "Internal server error" });
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

@@ -50,7 +50,6 @@ function Sidebar({ userData }) {
     const handleGetChats = async () => {
       try {
         const response = await getChat();
-        console.log("response from getChat : ", response?.data);
         dispatch(setChatsData(response?.data));
       } catch (error) {
         console.log("error while getting chats : ", error);

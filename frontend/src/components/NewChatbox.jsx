@@ -2,38 +2,171 @@ import { useNavigate, useParams } from "react-router-dom";
 import { defaultFeatures } from "./landigPage/featureMenu.data";
 import { useEffect, useRef, useState } from "react";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import api from "../../utils/axios";
+import { getMessages } from "../features/getMessages";
+import {
+  addMessageData,
+  setGenerating,
+  setMessageData,
+} from "../redux/messagesSlice";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import AiMarkdown from "./AiMarkdown";
 
 function NewChatbox() {
   const bottomRef = useRef(null);
   const { chatId } = useParams();
   const navigate = useNavigate();
-  const chatsMessage = useSelector(
-    (state) => state.messages.messagesByChat[chatId],
+  const dispatch = useDispatch();
+  const [input, setInput] = useState("");
+  const messageData = useSelector((state) =>
+    chatId ? state.message.messagesByChat[chatId] : null,
   );
-  console.log("chatId : ", chatId);
-  console.log("messages : ", chatsMessage);
+  const messages = messageData?.messages ?? [];
+  const isGenerating = messageData?.isGenerating ?? false;
+
+  const handleSendMessage = async () => {
+    const message = input.trim();
+
+    if (!message || isGenerating) return;
+
+    setInput("");
+
+    let responseChatId = chatId;
+
+    try {
+      const saveResponse = await api.post("/api/chat/send-message", {
+        content: message,
+        chatId: chatId || undefined,
+      });
+
+      const {
+        chatId: returnedChatId,
+        isNewChat,
+        userMessage,
+      } = saveResponse.data.data;
+
+      responseChatId = returnedChatId;
+
+      if (isNewChat) {
+        dispatch(
+          setMessageData({
+            chatId: responseChatId,
+            messages: [userMessage],
+            cursor: null,
+            hasMore: false,
+          }),
+        );
+
+        navigate(`/chat/${responseChatId}`);
+      } else {
+        dispatch(
+          addMessageData({
+            chatId: responseChatId,
+            message: userMessage,
+          }),
+        );
+      }
+
+      dispatch(
+        setGenerating({
+          chatId: responseChatId,
+          isGenerating: true,
+        }),
+      );
+
+      const agentResponse = await api.post("/api/agent/agentcall", {
+        message,
+        chatId: responseChatId,
+      });
+
+      const { assistantMessage } = agentResponse.data.data;
+
+      dispatch(
+        addMessageData({
+          chatId: responseChatId,
+          message: assistantMessage,
+        }),
+      );
+    } catch (error) {
+      console.error("Agent route error:", error);
+
+      setInput(message);
+    } finally {
+      if (responseChatId) {
+        dispatch(
+          setGenerating({
+            chatId: responseChatId,
+            isGenerating: false,
+          }),
+        );
+      }
+    }
+  };
+
+  const handleKeyDown = async (event) => {
+    try {
+      if (event.key !== "Enter" || event.shiftKey) return;
+      event.preventDefault();
+      await handleSendMessage();
+    } catch (error) {
+      console.log("error while getting ai response : ", error);
+    }
+  };
+
   useEffect(() => {
     if (!chatId) {
-      navigate("/");
       return;
     }
-  }, [chatId]);
+
+    const existingMessages = messageData?.messages;
+
+    if (existingMessages?.length) {
+      return;
+    }
+
+    const handleGetMessages = async () => {
+      try {
+        const response = await getMessages(chatId);
+
+        const fetchedMessages = response?.data ?? [];
+
+        if (fetchedMessages.length === 0) {
+          navigate("/");
+          return;
+        }
+
+        dispatch(
+          setMessageData({
+            chatId,
+            messages: [...fetchedMessages].reverse(),
+            cursor: null,
+            hasMore: false,
+          }),
+        );
+      } catch (error) {
+        console.error("Error while getting messages:", error);
+      }
+    };
+
+    handleGetMessages();
+  }, [chatId, dispatch, navigate]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "end",
     });
-  }, [chatsMessage]);
+  }, [messages]);
 
   return (
     <div className="flex h-full w-full items-center justify-center">
-      {chatsMessage?.messages?.length >= 1 ? (
-        <div className="flex h-screen flex-col p-4">
-          <div className="scrollbar-width:none h-full min-h-0 w-full max-w-4xl overflow-y-auto [&::-webkit-scrollbar]:hidden">
+      {messages?.length >= 1 ? (
+        <div className="flex h-screen w-full max-w-4xl flex-col p-4">
+          <div className="scrollbar-width:none h-full min-h-0 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden">
             <div className="flex min-h-full flex-col justify-end space-y-6">
-              {chatsMessage?.messages?.map((chat, index) => {
+              {messages?.map((chat, index) => {
                 const isAssistant = ["assistant", "ai"].includes(chat.role);
 
                 return (
@@ -50,24 +183,48 @@ function NewChatbox() {
                           : "border-chat-user-border bg-chat-user w-1/2"
                       }`}
                     >
-                      {chat.content}
+                      {isAssistant ? (
+                        <AiMarkdown content={chat.content} />
+                      ) : (
+                        <div className="text-text whitespace-pre-wrap">
+                          {chat.content}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
+              {isGenerating && (
+                <div className="flex w-full justify-start">
+                  <div className="text-text-muted px-3 py-2">
+                    <div className="flex gap-1">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-current" />
+
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
+
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
           </div>
           <div className="relative w-full">
             <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Type your ideas here..."
               className="rounded-card border-secondary bg-surface-raised text-text placeholder:text-muted focus:border-accent h-24 w-full resize-none border p-4 pr-14 transition-colors outline-none"
             />
 
             <button
+              onClick={handleSendMessage}
+              disabled={isGenerating}
               type="button"
               aria-label="Send message"
-              className="bg-accent text-canvas hover:bg-accent-hover absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full transition-colors"
+              className="bg-accent text-canvas hover:bg-accent-hover absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               <IoArrowForwardCircleSharp size={36} />
             </button>
@@ -83,10 +240,25 @@ function NewChatbox() {
             Build, Run & Grow your business
           </h1>
 
-          <textarea
-            placeholder="Type your ideas here..."
-            className="rounded-card border-secondary bg-surface-raised text-text placeholder:text-text-muted focus:border-accent mt-6 h-36 w-full resize-none border p-4 transition-colors outline-none"
-          />
+          <div className="relative w-full">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your ideas here..."
+              className="rounded-card border-secondary bg-surface-raised text-text placeholder:text-text-muted focus:border-accent mt-6 h-36 w-full resize-none border p-4 transition-colors outline-none"
+            />
+
+            <button
+              onClick={handleSendMessage}
+              disabled={isGenerating}
+              type="button"
+              aria-label="Send message"
+              className="bg-accent text-canvas hover:bg-accent-hover absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <IoArrowForwardCircleSharp size={36} />
+            </button>
+          </div>
 
           <div className="scrollbar-width:none mt-4 flex w-full gap-2 overflow-x-auto pb-1 whitespace-nowrap [&::-webkit-scrollbar]:hidden">
             {defaultFeatures.map((feature) => {

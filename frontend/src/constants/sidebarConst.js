@@ -21,14 +21,26 @@ export const sidebarButtons = [
     id: "new chat",
     label: "New Chat",
     icon: FiPlusCircle,
-    onClick: createChat,
+    onClick: () => {
+      console.log("new chat button pressed");
+    },
   },
   {
     id: "search",
     label: "Search",
     icon: IoSearch,
+    onClick: () => {
+      console.log("search button pressed");
+    },
   },
-  { id: "plugin", label: "Plugin", icon: BsPlugin },
+  {
+    id: "plugin",
+    label: "Plugin",
+    icon: BsPlugin,
+    onClick: () => {
+      console.log("plugin button pressed");
+    },
+  },
 ];
 
 export const profileMenuButtons = [
