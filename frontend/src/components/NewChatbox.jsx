@@ -32,7 +32,6 @@ function NewChatbox() {
   const hasMore = messageData?.hasMore ?? false;
   const loading = messageData?.loading ?? false;
   const lastMessageId = messages.at(-1)?._id;
-  console.log("messageData : ", messageData);
 
   const handleSendMessage = async () => {
     const message = input.trim();
@@ -250,7 +249,7 @@ function NewChatbox() {
                     <div
                       className={`rounded-card border p-3 ${
                         isAssistant
-                          ? "border-chat-ai-border bg-chat-ai mb-8 w-full"
+                          ? "border-chat-ai-border bg-chat-ai mb-8 max-w-full"
                           : "border-chat-user-border bg-chat-user w-1/2"
                       }`}
                     >
@@ -292,7 +291,7 @@ function NewChatbox() {
 
             <button
               onClick={handleSendMessage}
-              disabled={isGenerating}
+              disabled={isGenerating || input.trim().length === 0}
               type="button"
               aria-label="Send message"
               className="bg-accent text-canvas hover:bg-accent-hover absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
@@ -322,7 +321,7 @@ function NewChatbox() {
 
             <button
               onClick={handleSendMessage}
-              disabled={isGenerating}
+              disabled={isGenerating || input.trim().length === 0}
               type="button"
               aria-label="Send message"
               className="bg-accent text-canvas hover:bg-accent-hover absolute right-3 bottom-3 flex size-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"

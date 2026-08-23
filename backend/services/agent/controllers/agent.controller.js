@@ -1,6 +1,5 @@
 import { HumanMessage } from "@langchain/core/messages";
 import axios from "axios";
-import { graph } from "../graph/buildGraph.js";
 
 const chatUrl = process.env.CHAT_SERVICE || "http://localhost:3002";
 
@@ -16,13 +15,26 @@ export const agentCall = async (req, res) => {
       });
     }
 
-    const response = await graph.invoke({
-      messages: [
-        new HumanMessage({
-          content: message.trim(),
-        }),
-      ],
-    });
+    const graph = req.app.locals.graph;
+
+    if (!graph) {
+      throw new Error("Graph is not initialized");
+    }
+
+    const response = await graph.invoke(
+      {
+        messages: [
+          new HumanMessage({
+            content: message.trim(),
+          }),
+        ],
+      },
+      {
+        configurable: {
+          thread_id: chatId,
+        },
+      },
+    );
 
     const aiContent = response?.messages?.at(-1)?.content;
 
@@ -48,7 +60,6 @@ export const agentCall = async (req, res) => {
 
     return res.status(200).json({
       message: "AI response generated",
-
       data: {
         chatId,
         assistantMessage,

@@ -7,6 +7,8 @@ import { pptNode } from "./nodes/ppt.node.js";
 import { codingNode } from "./nodes/coding.node.js";
 import { imageNode } from "./nodes/image.node.js";
 import { AgentState } from "./state.js";
+import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
+import { getLangGraphMongoClient } from "../config/langgraph-db.js";
 
 const workflow = new StateGraph(AgentState);
 
@@ -22,7 +24,7 @@ workflow.addEdge("__start__", "router");
 workflow.addConditionalEdges(
   "router",
   (agentState) => {
-    switch (agentState.agent) {
+    switch (agentState.route) {
       case "chat":
         return "chat";
         break;
@@ -61,4 +63,19 @@ workflow.addEdge("ppt", "__end__");
 workflow.addEdge("coding", "__end__");
 workflow.addEdge("image", "__end__");
 
-export const graph = workflow.compile();
+export const buildGraph = async () => {
+  const client = getLangGraphMongoClient();
+
+  const dbName = process.env.MONGODB_DB_NAME || "agent_db";
+
+  const checkpointer = new MongoDBSaver({
+    client,
+    dbName,
+  });
+
+  await checkpointer.setup();
+
+  return workflow.compile({
+    checkpointer,
+  });
+};
