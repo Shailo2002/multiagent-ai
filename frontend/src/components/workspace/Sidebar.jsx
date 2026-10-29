@@ -159,6 +159,7 @@ function Sidebar({ userData }) {
             className={`rounded-control text-text-soft hover:bg-surface-hover hover:text-text flex shrink-0 items-center justify-center transition-colors ${
               isExpanded ? "size-8" : "size-10"
             }`}
+            onClick={() => navigate("/")}
           >
             <FaPlus size={16} />
           </button>

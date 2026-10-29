@@ -24,9 +24,18 @@ Formatting:
 - Never generate large walls of text.
 `;
 
+  const recentMessages = state.messages.slice(-12);
+
+  const summary = state.conversationSummary || "";
+
   const response = await model.invoke([
-    new SystemMessage(systemPrompt),
-    ...state.messages,
+    new SystemMessage(`
+    ${systemPrompt}
+
+    Previous conversation summary:
+    ${summary}
+  `),
+    ...recentMessages,
   ]);
   return {
     messages: [response],

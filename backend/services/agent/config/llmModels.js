@@ -4,7 +4,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 const getOpenAI = () =>
   new ChatOpenAI({
-    model: process.env.OPENAI_MODEL,
+    model: "gpt-4.1-nano",
     maxRetries: 2,
   });
 
@@ -16,16 +16,15 @@ const getAnthropic = () =>
 
 const getGemini = () =>
   new ChatGoogleGenerativeAI({
-    model: "gemini-2.5-pro",
+    model: "gemini-2.5-flash-lite",
     maxRetries: 2,
   });
 
 export const getModel = async (agent) => {
   switch (agent) {
+    // return getOpenAI();
     case "chat":
     case "search":
-      return getOpenAI();
-
     case "pdf":
     case "ppt":
     case "coding":
@@ -35,6 +34,6 @@ export const getModel = async (agent) => {
       return getGemini();
 
     default:
-      return getOpenAI();
+      return getAnthropic();
   }
 };

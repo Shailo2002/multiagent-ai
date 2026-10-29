@@ -9,9 +9,11 @@ import { imageNode } from "./nodes/image.node.js";
 import { AgentState } from "./state.js";
 import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
 import { getLangGraphMongoClient } from "../config/langgraph-db.js";
+import { contextManagerNode } from "./nodes/context-manager.node.js";
 
 const workflow = new StateGraph(AgentState);
 
+workflow.addNode("contextManager", contextManagerNode);
 workflow.addNode("router", routerNode);
 workflow.addNode("chat", chatNode);
 workflow.addNode("search", searchNode);
@@ -20,7 +22,8 @@ workflow.addNode("ppt", pptNode);
 workflow.addNode("coding", codingNode);
 workflow.addNode("image", imageNode);
 
-workflow.addEdge("__start__", "router");
+workflow.addEdge("__start__", "contextManager");
+workflow.addEdge("contextManager", "router");
 workflow.addConditionalEdges(
   "router",
   (agentState) => {

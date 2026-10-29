@@ -4,11 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -k -n gateway,auth,chat,agent -c blue,green,yellow,magenta \"npm run dev --prefix gateway\" \"npm run dev --prefix services/auth\" \"npm run dev --prefix services/chat\" \"npm run dev --prefix services/agent\"",
+    "redis:up": "docker compose up -d redis",
+    "redis:down": "docker compose stop redis",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "type": "module",
   "dependencies": {
     "ioredis": "^6.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

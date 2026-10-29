@@ -21,6 +21,12 @@ export const agentCall = async (req, res) => {
       throw new Error("Graph is not initialized");
     }
 
+    const config = {
+      configurable: {
+        thread_id: chatId,
+      },
+    };
+
     const response = await graph.invoke(
       {
         messages: [
@@ -29,13 +35,16 @@ export const agentCall = async (req, res) => {
           }),
         ],
       },
-      {
-        configurable: {
-          thread_id: chatId,
-        },
-      },
+      config,
     );
 
+    // Check persisted LangGraph state
+    const savedState = await graph.getState(config);
+
+    console.log("===== MEMORY DEBUG =====");
+    console.log("Active messages:", savedState.values.messages.length);
+    console.log("Saved summary:", savedState.values.conversationSummary);
+    console.log("========================");
     const aiContent = response?.messages?.at(-1)?.content;
 
     if (!aiContent) {
