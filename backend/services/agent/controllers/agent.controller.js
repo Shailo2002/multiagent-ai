@@ -21,9 +21,13 @@ export const agentCall = async (req, res) => {
       throw new Error("Graph is not initialized");
     }
 
+
     const config = {
       configurable: {
         thread_id: chatId,
+      },
+      context: {
+        userId: String(userId),
       },
     };
 

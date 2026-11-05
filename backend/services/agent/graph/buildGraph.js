@@ -10,9 +10,12 @@ import { AgentState } from "./state.js";
 import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
 import { getLangGraphMongoClient } from "../config/langgraph-db.js";
 import { contextManagerNode } from "./nodes/context-manager.node.js";
+import { createMemoryStore } from "../config/long-term-store.js";
+import { memoryLoaderNode } from "./nodes/memory-loader.js";
 
 const workflow = new StateGraph(AgentState);
 
+workflow.addNode("memoryLoader", memoryLoaderNode);
 workflow.addNode("contextManager", contextManagerNode);
 workflow.addNode("router", routerNode);
 workflow.addNode("chat", chatNode);
@@ -22,7 +25,8 @@ workflow.addNode("ppt", pptNode);
 workflow.addNode("coding", codingNode);
 workflow.addNode("image", imageNode);
 
-workflow.addEdge("__start__", "contextManager");
+workflow.addEdge("__start__", "memoryLoader");
+workflow.addEdge("memoryLoader", "contextManager");
 workflow.addEdge("contextManager", "router");
 workflow.addConditionalEdges(
   "router",
@@ -76,9 +80,12 @@ export const buildGraph = async () => {
     dbName,
   });
 
+  const store = createMemoryStore(client);
+
   await checkpointer.setup();
 
   return workflow.compile({
     checkpointer,
+    store,
   });
 };

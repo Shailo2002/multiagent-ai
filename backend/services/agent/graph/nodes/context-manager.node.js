@@ -13,10 +13,6 @@ export async function contextManagerNode(state) {
     return {};
   }
 
-  console.log("Summarization triggered!");
-
-  console.log("older summary:", state.conversationSummary);
-
   const olderMessages = messages.slice(0, -4);
 
   const summary = await summarizeConversation(
@@ -24,8 +20,6 @@ export async function contextManagerNode(state) {
     olderMessages,
     model,
   );
-
-  console.log("Generated summary:", summary);
 
   const messagesToRemove = olderMessages.map(
     (msg) => new RemoveMessage({ id: msg.id }),
