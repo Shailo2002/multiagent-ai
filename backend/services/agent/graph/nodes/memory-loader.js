@@ -1,16 +1,23 @@
-import { getAllMemories } from "../../memory/long-term-memory.js";
+import { memoryNamespace } from "../../memory/memory.namespace.js";
 
 export async function memoryLoaderNode(state, runtime) {
   const userId = runtime.context?.userId;
   const store = runtime.store;
 
   if (!userId || !store) {
-    throw new Error("User context or memory store missing");
+    throw new Error("Missing userId or memory store");
   }
 
-  const memories = await getAllMemories(store, userId);
+  const results = await store.search(memoryNamespace(userId), {
+    filter: { status: "active" },
+    limit: 20,
+  });
 
-  console.log("Loaded long-term memories:", memories);
+  const memories = results.map((item) => ({
+    id: item.key,
+    content: item.value.content,
+    category: item.value.category,
+  }));
 
   return {
     longTermMemories: memories,

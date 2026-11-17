@@ -70,7 +70,7 @@ workflow.addEdge("ppt", "__end__");
 workflow.addEdge("coding", "__end__");
 workflow.addEdge("image", "__end__");
 
-export const buildGraph = async () => {
+export const buildGraph = async (store) => {
   const client = getLangGraphMongoClient();
 
   const dbName = process.env.MONGODB_DB_NAME || "agent_db";
@@ -79,8 +79,6 @@ export const buildGraph = async () => {
     client,
     dbName,
   });
-
-  const store = createMemoryStore(client);
 
   await checkpointer.setup();
 

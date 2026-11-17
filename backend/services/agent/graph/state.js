@@ -9,10 +9,9 @@ export const AgentState = new StateSchema({
   longTermMemories: z
     .array(
       z.object({
-        key: z.string(),
-        type: z.string(),
-        value: z.string(),
-        updatedAt: z.string(),
+        id: z.string(),
+        content: z.string(),
+        category: z.string(),
       }),
     )
     .default([]),
@@ -20,6 +19,5 @@ export const AgentState = new StateSchema({
   route: z.enum(["chat", "search", "coding", "ppt", "pdf", "image"]).optional(),
 
   confidence: z.number().min(0).max(1).optional(),
-
   routeReason: z.string().optional(),
 });
