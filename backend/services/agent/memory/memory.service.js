@@ -1,7 +1,11 @@
-import { randomUUID } from "node:crypto";
 import { decideMemoryAction } from "./memory.processor.js";
 import { extractMemories } from "./memory.extractor.js";
 import { memoryNamespace } from "./memory.namespace.js";
+import {
+  normalizeCandidate,
+  normalizeMemoryField,
+  getMemoryKey,
+} from "./memory.utils.js";
 
 export function createMemoryService(store) {
   async function listMemories(userId) {
@@ -11,43 +15,67 @@ export function createMemoryService(store) {
     });
 
     return results.map((item) => ({
-      id: item.key,
       ...item.value,
+      id: item.key,
     }));
   }
 
   async function saveCandidate({ userId, candidate }) {
-    const namespace = memoryNamespace(userId);
+    const normalized = normalizeCandidate(candidate);
 
-    const matches = await store.search(namespace, {
-      filter: {
-        subject: candidate.subject,
-        attribute: candidate.attribute,
-        status: "active",
-      },
-      limit: 20,
+    if (!normalized) {
+      return { action: "ignore", reason: "Invalid memory" };
+    }
+
+    const namespace = memoryNamespace(userId);
+    const key = getMemoryKey(normalized);
+
+    // Fast lookup for newly saved memories.
+    const directMatch = await store.get(namespace, key);
+
+    // Also check older UUID-based memories.
+    const all = await store.search(namespace, {
+      filter: { status: "active" },
+      limit: 500,
     });
 
+    const matches = all.filter((item) => {
+      const value = item.value;
+
+      return (
+        normalizeMemoryField(value.subject) === normalized.subject &&
+        normalizeMemoryField(value.attribute) === normalized.attribute
+      );
+    });
+
+    if (
+      directMatch?.value?.status === "active" &&
+      !matches.some((item) => item.key === key)
+    ) {
+      matches.push(directMatch);
+    }
+
     const existing = matches.map((item) => ({
-      id: item.key,
       ...item.value,
+      id: item.key,
     }));
 
-    const decision =
-      existing.length === 0
-        ? { action: "insert", reason: "No existing memory" }
-        : await decideMemoryAction(candidate, existing);
+    const decision = existing.length
+      ? await decideMemoryAction(normalized, existing)
+      : { action: "insert" };
 
     const now = new Date().toISOString();
 
     if (decision.action === "insert") {
-      const id = randomUUID();
+      // Use a stable key for new memories.
+      // If a legacy match exists, preserve it.
+      const id = matches[0]?.key || key;
 
       await store.put(namespace, id, {
-        ...candidate,
+        ...normalized,
         type: "semantic",
         status: "active",
-        createdAt: now,
+        createdAt: matches[0]?.value.createdAt || now,
         updatedAt: now,
       });
 
@@ -60,13 +88,16 @@ export function createMemoryService(store) {
       );
 
       if (!old || !decision.revisedContent) {
-        return { action: "review" };
+        return {
+          action: "review",
+          reason: "Invalid update decision",
+        };
       }
 
       await store.put(namespace, old.key, {
         ...old.value,
         content: decision.revisedContent,
-        confidence: candidate.confidence,
+        confidence: normalized.confidence,
         updatedAt: now,
       });
 
@@ -84,12 +115,7 @@ export function createMemoryService(store) {
     const results = [];
 
     for (const candidate of candidates) {
-      const result = await saveCandidate({
-        userId,
-        candidate,
-      });
-
-      results.push(result);
+      results.push(await saveCandidate({ userId, candidate }));
     }
 
     return results;
@@ -99,9 +125,7 @@ export function createMemoryService(store) {
     const namespace = memoryNamespace(userId);
     const existing = await store.get(namespace, memoryId);
 
-    if (!existing) {
-      return false;
-    }
+    if (!existing) return false;
 
     await store.delete(namespace, memoryId);
     return true;

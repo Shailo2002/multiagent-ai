@@ -34,6 +34,13 @@ export async function extractMemories(message) {
       - Return an empty memories array if nothing is useful.
       - Use stable subject and attribute names.
       - Each memory should represent one atomic fact.
+      - Use lowercase canonical subject names.
+      - Prefer stable project identifiers over generic labels.
+      - Use "database" as the attribute for database technology.
+      - Use "language" for a programming language preference.
+      - Resolve aliases consistently when possible.
+      - Never extract instructions to forget something as a new memory.
+      - Never extract facts about unrelated third parties.
     `),
     new HumanMessage(message),
   ]);

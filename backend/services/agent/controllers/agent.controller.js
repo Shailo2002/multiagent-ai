@@ -1,5 +1,6 @@
 import { HumanMessage } from "@langchain/core/messages";
 import axios from "axios";
+import { isExplicitMemoryRequest } from "../memory/memory.intent.js";
 
 const chatUrl = process.env.CHAT_SERVICE || "http://localhost:3002";
 
@@ -34,6 +35,8 @@ export const agentCall = async (req, res) => {
     });
 
     // 2. Extract, compare and save long-term memories
+    const explicitMemory = isExplicitMemoryRequest(message);
+
     try {
       const results = await memoryService.processMessage({
         userId: String(userId),
@@ -41,9 +44,31 @@ export const agentCall = async (req, res) => {
       });
 
       console.log("Memory actions:", results);
+
+      if (explicitMemory) {
+        const successful = results.some(
+          (result) =>
+            ["insert", "update", "ignore"].includes(result.action) &&
+            result.reason !== "Invalid memory",
+        );
+
+        if (!successful) {
+          return res.status(422).json({
+            message:
+              "I could not reliably save that memory. Please state the fact more clearly.",
+          });
+        }
+      }
     } catch (memoryError) {
-      // Memory extraction failure should not stop normal chat
       console.error("Memory processing failed:", memoryError);
+
+      if (explicitMemory) {
+        return res.status(503).json({
+          message: "Memory saving failed. Please try again.",
+        });
+      }
+
+      // Ordinary messages can continue without memory saving.
     }
 
     // 3. Invoke LangGraph

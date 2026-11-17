@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { routerSystemPrompt } from "../prompts/router.prompt.js";
 
 const RouterOutputSchema = z.object({
-  route: z.enum(["chat", "search", "code", "ppt", "pdf", "image"]),
+  route: z.enum(["chat", "search", "coding", "ppt", "pdf", "image"]),
   confidence: z.number().min(0).max(1),
   reason: z.string(),
 });
